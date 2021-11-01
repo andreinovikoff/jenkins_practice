@@ -11,9 +11,9 @@ pipeline {
                 echo 'Logging Into the Private ECR Registry'
                 script {
                     GIT_COMMIT_HASH = sh (script: "git log -n 1 --pretty=format:'%H'", returnStdout: true)
-                    ACCOUNT_REGISTRY_PREFIX = "089778365617.dkr.ecr.us-east-1.amazonaws.com"
+                    ACCOUNT_REGISTRY_PREFIX = "839698902718.dkr.ecr.us-east-2.amazonaws.com"
                     sh """
-                    \$(aws ecr get-login --no-include-email --region us-east-1)
+                    	aws ecr get-login-password --region us-east-2 | docker login --username AWS --password-stdin 839698902718.dkr.ecr.us-east-2.amazonaws.com
                     """
                 }
             }
@@ -23,7 +23,7 @@ pipeline {
             steps {
                 echo 'Starting to build the project builder docker image'
                 script {
-                    builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp-builder:${GIT_COMMIT_HASH}", "-f ./Dockerfile.builder .")
+                    builderImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-web-builder:${GIT_COMMIT_HASH}", "-f ./Dockerfile.builder .")
                     builderImage.push()
                     builderImage.push("${env.GIT_BRANCH}")
                     builderImage.inside('-v $WORKSPACE:/output -u root') {
@@ -54,7 +54,7 @@ pipeline {
             steps {
                 echo 'Starting to build docker image'
                 script {
-                    productionImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-webapp:${GIT_COMMIT_HASH}")
+                    productionImage = docker.build("${ACCOUNT_REGISTRY_PREFIX}/example-web-app:${GIT_COMMIT_HASH}")
                     productionImage.push()
                     productionImage.push("${env.GIT_BRANCH}")
                 }
@@ -71,7 +71,7 @@ pipeline {
                 script {
                     productionImage.push("deploy")
                     sh """
-                       aws ec2 reboot-instances --region us-east-1 --instance-ids i-0e438e2bf64427c9d
+                       aws ec2 reboot-instances --region us-east-2 --instance-ids i-0015ce0695ea4d9a6 
                     """
                 }
             }
